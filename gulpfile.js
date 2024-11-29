@@ -1,106 +1,104 @@
-const {src,dest, watch, parallel, series} = require('gulp');
+// Импортируем необходимые модули из Gulp
+const {src, dest, watch, parallel, series} = require('gulp');
 
-const scss = require('gulp-sass')(require('sass'));
-const concat = require('gulp-concat');
-const uglify = require('gulp-uglify-es').default;
-const browserSync = require('browser-sync').create();
-const clean = require('gulp-clean');
+// Подключаем модули для обработки SCSS, объединения файлов, минификации и прочее
+const scss = require('gulp-sass')(require('sass'));  // Компиляция SCSS в CSS
+const concat = require('gulp-concat');  // Объединение файлов в один
+const uglify = require('gulp-uglify-es').default;  // Минификация JavaScript
+const browserSync = require('browser-sync').create();  // Локальный сервер с автоперезагрузкой
+const clean = require('gulp-clean');  // Удаление файлов или папок
+const fileinclude = require('gulp-file-include');  // Инклюды для HTML
 
-
-	// // Подключаем модуль gulp-clean-css
-  // const cleancss = require('gulp-clean-css');
- 
-  // Подключаем compress-images для работы с изображениями
-  const imagecomp = require('compress-images');
-
-
-
-  async function images() {
-    await imagecomp(
-      "app/img/src/**/*", // Берём все изображения из папки источника
-      "app/img/dest/", // Выгружаем оптимизированные изображения в папку назначения
-      { compress_force: false, statistic: true, autoupdate: true }, false, // Настраиваем основные параметры
-      { jpg: { engine: "mozjpeg", command: ["-quality", "75"] } }, // Сжимаем и оптимизируем изображеня
-      { png: { engine: "pngquant", command: ["--quality=75-100", "-o"] } },
-      { svg: { engine: "svgo", command: "--multipass" } },
-      { gif: { engine: "gifsicle", command: ["--colors", "64", "--use-col=web"] } },
-      function (err, completed) { // Обновляем страницу по завершению
-        if (completed === true) {
-          browserSync.reload()
-        }
-      }
+// Функция для обработки HTML с инклудов
+function htmlInclude() {
+  return src('app/html/index.html')  // Берем только главный HTML-файл
+    .pipe(
+      fileinclude({
+        prefix: '@@',  // Префикс для инклудов
+        basepath: '@file',  // Путь для поиска инклудов
+      })
     )
-  }
-
-function scripts(){
-  return src('app/js/main.js',)
-  .pipe(concat('main.min.js'))
-  .pipe(uglify())
-  .pipe(dest('app/js'))
-  .pipe(browserSync.stream());
+    .pipe(dest('app'))  // Сохраняем скомпилированные HTML файлы в папку app
+    .pipe(browserSync.stream());  // Автоперезагрузка страницы при изменениях
 }
 
-function styles(){
+// Функция для обработки JavaScript
+function scripts() {
+  return src('app/js/main.js')  // Берем основной файл JS
+    .pipe(concat('main.min.js'))  // Объединяем все JS файлы в один main.min.js
+    .pipe(uglify())  // Минифицируем JS код
+    .pipe(dest('app/js'))  // Сохраняем в папку app/js
+    .pipe(browserSync.stream());  // Автоперезагрузка страницы при изменениях
+}
 
-  // Создаем не минифицированный файл
+// Функция для обработки SCSS
+function styles() {
+  // Создание не минифицированного CSS
   src(['app/scss/style.scss'])
-    .pipe(scss({ outputStyle: 'expanded' }))
-    .pipe(concat('style.css'))               // Создаст единый style.css
-    .pipe(dest('app/css'))                   
-    .pipe(browserSync.stream());
+    .pipe(scss({ outputStyle: 'expanded' }))  // Компиляция SCSS в обычный CSS
+    .pipe(concat('style.css'))  // Объединение всех файлов в один style.css
+    .pipe(dest('app/css'))  // Сохраняем в папку app/css
+    .pipe(browserSync.stream());  // Автоперезагрузка страницы при изменениях
 
-  // Создаем минифицированный файл
+  // Создание минифицированного CSS
   return src(['app/scss/style.scss'])
-    .pipe(scss({ outputStyle: 'compressed' }))
-    .pipe(concat('style.min.css'))           // Создаст единый style.min.css
-    .pipe(dest('app/css'))
-    .pipe(browserSync.stream());
-  
+    .pipe(scss({ outputStyle: 'compressed' }))  // Компиляция SCSS в минифицированный CSS
+    .pipe(concat('style.min.css'))  // Объединение всех файлов в один style.min.css
+    .pipe(dest('app/css'))  // Сохраняем в папку app/css
+    .pipe(browserSync.stream());  // Автоперезагрузка страницы при изменениях
 }
 
-function watching(){
-  watch(['app/scss/**/*.scss'], styles);
-  watch(['app/**/*.js','!app/**/*.min.js'],scripts)
-  watch(['app/*.html']).on('change', browserSync.reload)
-  watch('app/img/src/**/*', images)
+// Функция для отслеживания изменений в файлах
+function watching() {
+  watch(['app/scss/**/*.scss'], styles);  // Отслеживаем изменения SCSS файлов
+  watch(['app/**/*.js', '!app/**/*.min.js'], scripts);  // Отслеживаем изменения JS файлов
+  watch(['app/html/**/*.html'], htmlInclude);  // Отслеживаем изменения всех HTML файлов
+  watch(['app/*.html']).on('change', browserSync.reload);  // Автоперезагрузка страницы при изменении HTML
 }
 
-function browsersync(){
+// Функция для настройки локального сервера
+function browsersync() {
   browserSync.init({
     server: {
-        baseDir: "app/",
-        notify: false, // Отключаем уведомления
-        online: true // Режим работы: true или false
+      baseDir: "app/",  // Базовая директория для сервера
+      notify: false,  // Отключаем уведомления
+      online: true,  // Включаем онлайн-режим
     }
-});
+  });
 }
 
-function cleanDist (){
-  return src('dist')
-  .pipe(clean());
+// Функция для очистки папки dist
+function cleanDist() {
+  return src('docs')  // Удаляем все содержимое папки docs
+    .pipe(clean());
 }
 
-function cleanimg() {
-	return src('app/img/dest/', {allowEmpty: true}).pipe(clean()) // Удаляем папку "app/images/dest/"
+// Функция для копирования изображений в папку docs
+function copyImages() {
+  return src('app/img/**/*', {encoding: false})  // Берем все изображения из папки app/img
+    .pipe(dest('docs/img'));  // Копируем изображения в папку docs/img
 }
 
-function building(){
+// Функция для сборки проекта в папку docs
+function building() {
   return src([
-    'app/css/style.min.css',
-    'app/css/style.css',
-    'app/js/main.min.js',
-    'app/img/dest/**/*',
-    'app/*.html'
-  ],{base:'app'})
-  .pipe(dest('dist'))
+    'app/css/style.min.css',  // Минифицированный CSS
+    'app/css/style.css',  // Обычный CSS
+    'app/js/main.min.js',  // Минифицированный JS
+    'app/index.html',  // Указываем только главный HTML файл
+  ], {base: 'app'})  // Сохраняем структуру папок
+    .pipe(dest('docs'));  // Выгружаем в папку docs
 }
 
-exports.cleanimg = cleanimg;
-exports.images = images;
-exports.styles = styles;
-exports.scripts = scripts;
-exports.watching = watching;
-exports.browsersync = browsersync;
+// Экспортируем задачи
+exports.styles = styles;  // Задача для обработки стилей
+exports.scripts = scripts;  // Задача для обработки JavaScript
+exports.watching = watching;  // Задача для отслеживания изменений
+exports.browsersync = browsersync;  // Задача для настройки локального сервера
+exports.htmlInclude = htmlInclude;  // Задача для обработки инклудов в HTML
 
-exports.build = series(cleanDist,images,building)
-exports.default = parallel(styles,scripts,browsersync,watching,series(cleanimg,images));
+// Задача для сборки проекта
+exports.build = series(cleanDist, parallel(building, copyImages));  // Очищаем папку и выполняем сборку
+
+// Задача по умолчанию, которая запускает проект
+exports.default = parallel(styles, scripts, browsersync, watching, htmlInclude);  // Запуск всех задач

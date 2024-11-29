@@ -4,27 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
-    <link rel="stylesheet" href="css/stylin.css">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <div class="wrapper">
-        <header class="header" id="header">
-            <div class="header__content _container">
-                header1
-            </div>
-        </header>
+        @@include('header.html')
 		<!-- Основной контент -->
 		<main class="main" id="main">           
             <div class="main__content _container">
                 main
             </div>
 		</main>
+        @@include('footer.html')
 		<!-- Основной контент -->
-		<footer class="footer" id="footer">
-            <div class="footer__content _container">
-                footer
-            </div>
-		</footer>
     </div>
     <script src="js/main.min.js"></script>
 </body>

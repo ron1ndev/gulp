@@ -3,6 +3,7 @@ body {
   color: #000;
   font-size: 14px;
   overflow-anchor: none;
+  background-color: #ffffff;
 }
 
 body._lock {
@@ -141,8 +142,4 @@ h5,
 h6 {
   font-weight: inherit;
   font-size: inherit;
-}
-
-main {
-  color: green;
 }
