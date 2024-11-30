@@ -11,15 +11,15 @@ const fileinclude = require('gulp-file-include');  // Инклюды для HTML
 
 // Функция для обработки HTML с инклудов
 function htmlInclude() {
-  return src('app/html/index.html')  // Берем только главный HTML-файл
+  return src('app/html/*.html')  // Обрабатываем только конечные HTML файлы
     .pipe(
       fileinclude({
-        prefix: '@@',  // Префикс для инклудов
-        basepath: '@file',  // Путь для поиска инклудов
+        prefix: '@@',            // Префикс для инклудов
+        basepath: '@file',       // Путь для поиска инклудов
       })
     )
-    .pipe(dest('app'))  // Сохраняем скомпилированные HTML файлы в папку app
-    .pipe(browserSync.stream());  // Автоперезагрузка страницы при изменениях
+    .pipe(dest('app'))           // Сохраняем итоговые файлы в корень app
+    .pipe(browserSync.stream()); // Автоперезагрузка страницы
 }
 
 // Функция для обработки JavaScript
@@ -83,11 +83,13 @@ function copyImages() {
 function building() {
   return src([
     'app/css/style.min.css',  // Минифицированный CSS
-    'app/css/style.css',  // Обычный CSS
-    'app/js/main.min.js',  // Минифицированный JS
-    'app/index.html',  // Указываем только главный HTML файл
-  ], {base: 'app'})  // Сохраняем структуру папок
-    .pipe(dest('docs'));  // Выгружаем в папку docs
+    'app/css/style.css',      // Обычный CSS
+    'app/js/main.min.js',     // Минифицированный JS
+    'app/*.html',             // Только файлы в корне папки app
+    '!app/html/**',           // Исключаем всю папку html, включая includes
+    '!app/html/includes/**',  // Дополнительно исключаем папку includes
+  ], {base: 'app'})
+    .pipe(dest('docs'));       // Копируем файлы в папку docs
 }
 
 // Экспортируем задачи
